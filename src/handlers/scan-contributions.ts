@@ -10,44 +10,53 @@ import { Context } from "../types";
  *
  * Logger examples are provided to show how to log different types of data.
  */
-export async function helloWorld(context: Context) {
-  const {
-    logger,
-    payload,
-    octokit,
-    config: { configurableResponse, customStringsUrl },
-  } = context;
+export async function scanContributions(context: Context) {
+  const { logger, payload, octokit } = context;
 
-  const sender = payload.comment.user?.login;
+  const store: Record<string, Record<string, number>> = {};
+
   const repo = payload.repository.name;
   const issueNumber = payload.issue.number;
   const owner = payload.repository.owner.login;
   const body = payload.comment.body;
 
-  if (!body.match(/hello/i)) {
-    logger.error(`Invalid use of slash command, use "/hello".`, { body });
+  if (!body.match(/scan-contributions/i)) {
     return;
   }
 
-  logger.info("Hello, world!");
-  logger.debug(`Executing helloWorld:`, { sender, repo, issueNumber, owner });
+  logger.info("Scanning Events!");
 
   try {
-    await octokit.issues.createComment({
-      owner: payload.repository.owner.login,
-      repo: payload.repository.name,
-      issue_number: payload.issue.number,
-      body: configurableResponse,
+    const contributors = await octokit.repos.listContributors({
+      repo,
+      owner,
     });
-    if (customStringsUrl) {
-      const response = await fetch(customStringsUrl).then((value) => value.json());
-      await octokit.issues.createComment({
-        owner: payload.repository.owner.login,
-        repo: payload.repository.name,
-        issue_number: payload.issue.number,
-        body: response.greeting,
-      });
-    }
+
+    contributors.data.forEach((contributor) => {
+      if (contributor.login) {
+        store[contributor.login] = {};
+      }
+    });
+
+    const issueEvents = await octokit.issues.listEventsForTimeline({
+      owner,
+      repo,
+      issue_number: issueNumber,
+    });
+
+    issueEvents.data.forEach((ev) => {
+      if ("actor" in ev && ev.actor && store[ev.actor.login]) {
+        if (!store[ev.actor.login][ev.event]) store[ev.actor.login][ev.event] = 1;
+        else store[ev.actor.login][ev.event] += 1;
+      }
+    });
+
+    await octokit.issues.createComment({
+      owner,
+      repo,
+      issue_number: issueNumber,
+      body: JSON.stringify(store, undefined, 2),
+    });
   } catch (error) {
     /**
      * logger.fatal should not be used in 9/10 cases. Use logger.error instead.

@@ -1,16 +1,16 @@
 {
-  "name": "ts-template",
-  "description": "ts-template for UbiquityOS plugins.",
-  "ubiquity:listeners": ["issue_comment.created", "issue_comment.deleted", "issue_comment.edited"],
+  "name": "scan-contributions",
+  "description": "UbiquityOS plugin for scanning contributions based on issues/pulls.",
+  "ubiquity:listeners": ["issue_comment.created", "issue_comment.edited"],
   "commands": {
     "command1": {
-      "ubiquity:example": "/command1 argument",
-      "description": "Command 1 with an argument."
+      "ubiquity:example": "/scan-contributions argument",
+      "description": "Activating commad with an argument."
     }
   },
   "configuration": {
     "default": {
-      "configurableResponse": "Hello, world!"
+      "configurableResponse": "Welcome to the UbiquityOS contributions scanner!"
     },
     "type": "object",
     "properties": {

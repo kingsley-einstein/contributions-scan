@@ -3,8 +3,11 @@ import { returnDataToKernel } from "./helpers/validator";
 import { Env, PluginInputs } from "./types";
 import { Context } from "./types";
 import { isIssueCommentEvent } from "./types/typeguards";
-import { helloWorld } from "./handlers/hello-world";
+import { scanContributions } from "./handlers/scan-contributions";
 import { LogLevel, Logs } from "@ubiquity-dao/ubiquibot-logger";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 /**
  * The main plugin function. Split for easier testing.
@@ -13,7 +16,7 @@ export async function runPlugin(context: Context) {
   const { logger, eventName } = context;
 
   if (isIssueCommentEvent(context)) {
-    return await helloWorld(context);
+    return await scanContributions(context);
   }
 
   logger.error(`Unsupported event: ${eventName}`);

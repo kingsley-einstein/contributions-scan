@@ -12,6 +12,7 @@ export const db = factory({
   },
   issue: {
     id: primaryKey(Number),
+    event: nullable(String),
     assignees: Array,
     html_url: String,
     repository_url: String,
@@ -69,6 +70,7 @@ export const db = factory({
       id: Number,
     },
     issues: Array,
+    contributors: Array,
   },
   issueComments: {
     id: primaryKey(Number),
@@ -80,5 +82,14 @@ export const db = factory({
       login: String,
       id: Number,
     },
+  },
+  issueEvents: {
+    id: primaryKey(Number),
+    issueNumber: Number,
+    event: String,
+    actor: nullable({
+      id: Number,
+      login: String,
+    }),
   },
 });
