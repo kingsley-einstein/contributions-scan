@@ -38,13 +38,9 @@ export async function scanContributions(context: Context) {
       }
     });
 
-    const issueEvents = await octokit.issues.listEventsForTimeline({
-      owner,
-      repo,
-      issue_number: issueNumber,
-    });
+    const issueEvents = await octokit.paginate(octokit.rest.issues.listEventsForTimeline, { owner, repo, issue_number: issueNumber });
 
-    issueEvents.data.forEach((ev) => {
+    issueEvents.forEach((ev) => {
       if ("actor" in ev && ev.actor && store[ev.actor.login]) {
         if (!store[ev.actor.login][ev.event]) store[ev.actor.login][ev.event] = 1;
         else store[ev.actor.login][ev.event] += 1;
