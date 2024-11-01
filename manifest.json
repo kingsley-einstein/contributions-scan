@@ -21,6 +21,8 @@
         "type": "string"
       }
     },
-    "required": ["configurableResponse"]
+    "required": [
+      "configurableResponse"
+    ]
   }
 }
