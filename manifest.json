@@ -1,7 +1,10 @@
 {
   "name": "scan-contributions",
   "description": "UbiquityOS plugin for scanning contributions based on issues/pulls.",
-  "ubiquity:listeners": ["issue_comment.created", "issue_comment.edited"],
+  "ubiquity:listeners": [
+    "issue_comment.created",
+    "issue_comment.edited"
+  ],
   "commands": {
     "command1": {
       "ubiquity:example": "/scan-contributions argument",
@@ -10,7 +13,7 @@
   },
   "configuration": {
     "default": {
-      "configurableResponse": "Welcome to the UbiquityOS contributions scanner!"
+      "configurableResponse": "Hello, world!"
     },
     "type": "object",
     "properties": {
