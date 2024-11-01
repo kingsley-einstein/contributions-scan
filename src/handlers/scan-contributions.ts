@@ -51,11 +51,14 @@ export async function scanContributions(context: Context) {
       }
     });
 
+    // In MD format
+    const octokitCommentBody = "```json\n" + JSON.stringify(store, undefined, 2) + "\n```";
+
     await octokit.issues.createComment({
       owner,
       repo,
       issue_number: issueNumber,
-      body: JSON.stringify(store, undefined, 2),
+      body: octokitCommentBody,
     });
   } catch (error) {
     /**
@@ -73,5 +76,5 @@ export async function scanContributions(context: Context) {
   }
 
   logger.ok(`Successfully created comment!`);
-  logger.verbose(`Exiting helloWorld`);
+  logger.verbose(`Exiting scanContributions`);
 }
