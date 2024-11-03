@@ -40,6 +40,18 @@ export async function scanContributions(context: Context) {
 
     const issueTimelineEvents = await octokit.paginate(octokit.issues.listEventsForTimeline, { owner, repo, issue_number: issueNumber });
     const issueEvents = await octokit.paginate(octokit.issues.listEvents, { owner, repo, issue_number: issueNumber });
+    const pullRequestReviewsEvents = await octokit.paginate(octokit.pulls.listReviews, { owner, repo, pull_number: issueNumber });
+    const issueReactionEvents = await octokit.paginate(octokit.reactions.listForIssue, { owner, repo, issue_number: issueNumber });
+    // const issueCommentsReactionEvents = await Promise.all(
+    //   (await octokit.paginate(octokit.issues.listComments, { owner, repo, issue_number: issueNumber })).map((comment) =>
+    //     octokit.paginate(octokit.reactions.listForIssueComment, { owner, repo, comment_id: comment.id })
+    //   )
+    // );
+    // const issueReviewCommentsReactionEvents = await Promise.all(
+    //   (await octokit.paginate(octokit.pulls.listReviews, { owner, repo, pull_number: issueNumber })).map((comment) =>
+    //     octokit.paginate(octokit.reactions.listForIssueComment, { owner, repo, comment_id: comment.id })
+    //   )
+    // );
 
     issueTimelineEvents.forEach((ev) => {
       if ("actor" in ev && ev.actor && store[ev.actor.login]) {
@@ -54,6 +66,42 @@ export async function scanContributions(context: Context) {
         else store[ev.actor.login][ev.event] += 1;
       }
     });
+
+    pullRequestReviewsEvents.forEach((ev) => {
+      const eventName = "review[".concat(ev.state.toLowerCase()).concat("]");
+      if (ev.user && store[ev.user.login]) {
+        if (!store[ev.user.login][eventName]) store[ev.user.login][eventName] = 1;
+        else store[ev.user.login][eventName] += 1;
+      }
+    });
+
+    issueReactionEvents.forEach((ev) => {
+      const eventName = "reaction_" + ev.content;
+      if (ev.user && store[ev.user.login]) {
+        if (!store[ev.user.login][eventName]) store[ev.user.login][eventName] = 1;
+        else store[ev.user.login][eventName] += 1;
+      }
+    });
+
+    // issueCommentsReactionEvents.forEach((event) => {
+    //   event.forEach((ev) => {
+    //     const eventName = "reaction_" + ev.content;
+    //     if (ev.user && store[ev.user.login]) {
+    //       if (!store[ev.user.login][eventName]) store[ev.user.login][eventName] = 1;
+    //       else store[ev.user.login][eventName] += 1;
+    //     }
+    //   });
+    // });
+
+    // issueReviewCommentsReactionEvents.forEach((event) => {
+    //   event.forEach((ev) => {
+    //     const eventName = "reaction_" + ev.content;
+    //     if (ev.user && store[ev.user.login]) {
+    //       if (!store[ev.user.login][eventName]) store[ev.user.login][eventName] = 1;
+    //       else store[ev.user.login][eventName] += 1;
+    //     }
+    //   });
+    // });
 
     // In MD format
     const octokitCommentBody = "```json\n" + JSON.stringify(store, undefined, 2) + "\n```";
