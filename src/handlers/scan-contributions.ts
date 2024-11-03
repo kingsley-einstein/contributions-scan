@@ -38,10 +38,18 @@ export async function scanContributions(context: Context) {
       }
     });
 
-    const issueEvents = await octokit.paginate(octokit.issues.listEventsForTimeline, { owner, repo, issue_number: issueNumber });
+    const issueTimelineEvents = await octokit.paginate(octokit.issues.listEventsForTimeline, { owner, repo, issue_number: issueNumber });
+    const issueEvents = await octokit.paginate(octokit.issues.listEvents, { owner, repo, issue_number: issueNumber });
+
+    issueTimelineEvents.forEach((ev) => {
+      if ("actor" in ev && ev.actor && store[ev.actor.login]) {
+        if (!store[ev.actor.login][ev.event]) store[ev.actor.login][ev.event] = 1;
+        else store[ev.actor.login][ev.event] += 1;
+      }
+    });
 
     issueEvents.forEach((ev) => {
-      if ("actor" in ev && ev.actor && store[ev.actor.login]) {
+      if (ev.actor && store[ev.actor.login] && !issueTimelineEvents.map((te) => te.event).includes(ev.event)) {
         if (!store[ev.actor.login][ev.event]) store[ev.actor.login][ev.event] = 1;
         else store[ev.actor.login][ev.event] += 1;
       }
