@@ -5,7 +5,7 @@
   "commands": {
     "command1": {
       "ubiquity:example": "/scan-contributions argument",
-      "description": "Activating command with an argument."
+      "description": "Slash command that maps the names of contributors to events executed within a repo's context."
     }
   },
   "configuration": {
