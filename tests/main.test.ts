@@ -60,31 +60,6 @@ describe("Plugin tests", () => {
     const comments = db.issueEvents.getAll();
     expect(comments.map((comment) => comment.event)).toContain(ISSUE_COMMENT_CREATED);
   });
-
-  // it("Should respond with `Hello, World!` in response to /Hello", async () => {
-  //   const { context } = createContext();
-  //   await runPlugin(context);
-  //   const comments = db.issueComments.getAll();
-  //   expect(comments.length).toBe(2);
-  //   expect(comments[1].body).toBe(STRINGS.HELLO_WORLD);
-  // });
-
-  // it("Should respond with `Hello, Code Reviewers` in response to /Hello", async () => {
-  //   const { context } = createContext(STRINGS.CONFIGURABLE_RESPONSE);
-  //   await runPlugin(context);
-  //   const comments = db.issueComments.getAll();
-  //   expect(comments.length).toBe(2);
-  //   expect(comments[1].body).toBe(STRINGS.CONFIGURABLE_RESPONSE);
-  // });
-
-  // it("Should not respond to a comment that doesn't contain /Hello", async () => {
-  //   const { context, errorSpy } = createContext(STRINGS.CONFIGURABLE_RESPONSE, STRINGS.INVALID_COMMAND);
-  //   await runPlugin(context);
-  //   const comments = db.issueComments.getAll();
-
-  //   expect(comments.length).toBe(1);
-  //   expect(errorSpy).toHaveBeenNthCalledWith(1, STRINGS.INVALID_USE_OF_SLASH_COMMAND, { caller: STRINGS.CALLER_LOGS_ANON, body: STRINGS.INVALID_COMMAND });
-  // });
 });
 
 /**

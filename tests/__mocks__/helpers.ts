@@ -83,6 +83,27 @@ export async function setupTests() {
     },
   });
 
+  db.pullReviews.create({
+    id: 14,
+    issueNumber: 4,
+    state: "CHANGES_REQUESTED",
+    user: {
+      id: 0,
+      login: STRINGS.USER_1,
+    },
+  });
+
+  db.reactions.create({
+    id: 1,
+    issueNumber: 4,
+    content: "heart",
+    comment_id: 1,
+    user: {
+      id: 0,
+      login: STRINGS.USER_1,
+    },
+  });
+
   createComment("/scan-contributions", 1);
 }
 
@@ -109,6 +130,8 @@ export function createComment(comment: string, commentId: number, userId: number
   } else {
     const user = db.users.findFirst({ where: { id: { equals: userId } } });
     const events = db.issueEvents.getAll();
+    const reviews = db.pullReviews.getAll();
+    const reactions = db.reactions.getAll();
     db.issueComments.create({
       id: commentId,
       body: comment,
@@ -123,6 +146,33 @@ export function createComment(comment: string, commentId: number, userId: number
       issueNumber,
       event: "issue_comment.created",
       actor: {
+        id: user?.id,
+        login: user?.login,
+      },
+    });
+    db.pullReviews.create({
+      id: reviews[reviews.length - 1].id + 1,
+      issueNumber,
+      state: "COMMENTED",
+      user: {
+        id: user?.id,
+        login: user?.login,
+      },
+    });
+    db.reactions.create({
+      id: reactions[reactions.length - 1].id + 1,
+      issueNumber,
+      content: "+1",
+      comment_id: commentId,
+      user: {
+        id: user?.id,
+        login: user?.login,
+      },
+    });
+    db.comments.create({
+      id: commentId,
+      body: comment,
+      user: {
         id: user?.id,
         login: user?.login,
       },

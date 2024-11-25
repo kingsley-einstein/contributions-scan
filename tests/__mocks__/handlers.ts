@@ -22,6 +22,13 @@ export const handlers = [
       })
     )
   ),
+  http.get("https://api.github.com/repos/:owner/:repo/:issues/:issue_number/events", ({ params: { issue_number: issueNumber } }) =>
+    HttpResponse.json(
+      db.issueEvents.findMany({
+        where: { issueNumber: { equals: Number(issueNumber) } },
+      })
+    )
+  ),
   // get issue
   http.get("https://api.github.com/repos/:owner/:repo/issues/:issue_number", ({ params: { owner, repo, issue_number: issueNumber } }) =>
     HttpResponse.json(
@@ -70,6 +77,25 @@ export const handlers = [
     const newItem = { id, body, issue_number: Number(issueNumber), user: users.at(0) };
     db.issueComments.create(newItem);
     return HttpResponse.json(newItem);
+  }),
+  http.get("https://api.github.com/repos/:owner/:repo/issues/:issue_number/comments", async ({ params: { issue_number: issueNumber } }) => {
+    const comments = db.issueComments.findMany({ where: { issue_number: { equals: Number(issueNumber) } } });
+    return HttpResponse.json(comments);
+  }),
+  // get pull reviews
+  http.get("https://api.github.com/repos/:owner/:repo/pulls/:issue_number/reviews", async ({ params: { issue_number: issueNumber } }) => {
+    const reviews = db.pullReviews.findMany({ where: { issueNumber: { equals: Number(issueNumber) } } });
+    return HttpResponse.json(reviews);
+  }),
+  // get issue reactions
+  http.get("https://api.github.com/repos/:owner/:repo/issues/:issue_number/reactions", async ({ params: { issue_number: issueNumber } }) => {
+    const reactions = db.reactions.findMany({ where: { issueNumber: { equals: Number(issueNumber) } } });
+    return HttpResponse.json(reactions);
+  }),
+  // get comments reaction
+  http.get("https://api.github.com/repos/:owner/:repo/issues/comments/:comment_id/reactions", async ({ params: { comment_id: commentId } }) => {
+    const reactions = db.reactions.findMany({ where: { comment_id: { equals: Number(commentId) } } });
+    return HttpResponse.json(reactions);
   }),
 ];
 

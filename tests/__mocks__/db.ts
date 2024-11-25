@@ -92,4 +92,31 @@ export const db = factory({
       login: String,
     }),
   },
+  pullReviews: {
+    id: primaryKey(Number),
+    issueNumber: Number,
+    user: {
+      login: String,
+      id: Number,
+    },
+    state: String,
+  },
+  reactions: {
+    id: primaryKey(Number),
+    issueNumber: Number,
+    user: {
+      login: String,
+      id: Number,
+    },
+    content: String,
+    comment_id: Number,
+  },
+  comments: {
+    id: primaryKey(Number),
+    body: String,
+    user: {
+      login: String,
+      id: Number,
+    },
+  },
 });

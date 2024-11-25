@@ -88,6 +88,7 @@ export async function scanContributions(context: Context) {
       });
     });
 
+    logger.info("Contributions stats: ", store);
     const octokitCommentBody = "```json\n" + JSON.stringify(store, undefined, 2) + "\n```";
 
     await octokit.issues.createComment({
