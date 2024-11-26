@@ -36,12 +36,8 @@ export default {
       const webhookPayload = await request.json();
 
       const { decodedSettings, decodedEnv } = validateAndDecodeSchemas(env, webhookPayload.settings);
-
-      webhookPayload.eventPayload = webhookPayload;
       webhookPayload.env = decodedEnv;
       webhookPayload.settings = decodedSettings;
-      webhookPayload.eventName = `${request.headers.get("x-github-event")}.${webhookPayload.action}`;
-      webhookPayload.authToken = webhookPayload.env.GITHUB_TOKEN;
 
       await plugin(webhookPayload, decodedEnv);
       return new Response(JSON.stringify("OK"), { status: 200, headers: { "content-type": "application/json" } });
