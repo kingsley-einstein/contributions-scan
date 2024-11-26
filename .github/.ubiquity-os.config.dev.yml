@@ -5,7 +5,4 @@ plugins:
           disabledCommands: []
           miscellaneous:
             maxConcurrentTasks: 3
-        runsOn:
-          - issue_comment
-          - issue_comment.created
-          - issue_comment.edited
+        runsOn: ["issue_comment", "issue_comment.created", "issue_comment.edited"]
