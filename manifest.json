@@ -3,8 +3,8 @@
   "description": "UbiquityOS plugin for scanning contributions based on issues/pulls.",
   "ubiquity:listeners": ["issue_comment.created", "issue_comment.edited", "issue_comment"],
   "commands": {
-    "scan-contributions": {
-      "ubiquity:example": "/scan-contributions",
+    "scanContributions": {
+      "ubiquity:example": "/scanContributions",
       "description": "Slash command that maps the names of contributors to events executed within a repo's context."
     }
   },
