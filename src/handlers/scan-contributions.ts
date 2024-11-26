@@ -30,7 +30,9 @@ export async function scanContributions(context: Context) {
 
     const issueTimelineEvents = await octokit.paginate(octokit.issues.listEventsForTimeline, { owner, repo, issue_number: issueNumber });
     const issueEvents = await octokit.paginate(octokit.issues.listEvents, { owner, repo, issue_number: issueNumber });
-    const pullRequestReviewsEvents = await octokit.paginate(octokit.pulls.listReviews, { owner, repo, pull_number: issueNumber });
+    const pullRequestReviewsEvents = payload.issue.pull_request
+      ? await octokit.paginate(octokit.pulls.listReviews, { owner, repo, pull_number: issueNumber })
+      : [];
     const issueReactionEvents = await octokit.paginate(octokit.reactions.listForIssue, { owner, repo, issue_number: issueNumber });
     const issueCommentsReactionEvents = await Promise.all(
       (await octokit.paginate(octokit.issues.listComments, { owner, repo, issue_number: issueNumber })).map((comment) =>
