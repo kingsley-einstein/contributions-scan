@@ -30,20 +30,26 @@ export async function scanContributions(context: Context) {
 
     const issueTimelineEvents = await octokit.paginate(octokit.issues.listEventsForTimeline, { owner, repo, issue_number: issueNumber });
     const issueEvents = await octokit.paginate(octokit.issues.listEvents, { owner, repo, issue_number: issueNumber });
-    const pullRequestReviewsEvents = payload.issue.pull_request
+    const issueReviewsEvents = payload.issue.pull_request
       ? await octokit.paginate(octokit.pulls.listReviews, { owner, repo, pull_number: issueNumber })
-      : [];
+      : await octokit.paginate(octokit.issues.listComments, { owner, repo, issue_number: issueNumber });
     const issueReactionEvents = await octokit.paginate(octokit.reactions.listForIssue, { owner, repo, issue_number: issueNumber });
     const issueCommentsReactionEvents = await Promise.all(
       (await octokit.paginate(octokit.issues.listComments, { owner, repo, issue_number: issueNumber })).map((comment) =>
         octokit.paginate(octokit.reactions.listForIssueComment, { owner, repo, comment_id: comment.id })
       )
     );
-    const issueReviewCommentsReactionEvents = await Promise.all(
-      (await octokit.paginate(octokit.pulls.listReviews, { owner, repo, pull_number: issueNumber })).map((comment) =>
-        octokit.paginate(octokit.reactions.listForIssueComment, { owner, repo, comment_id: comment.id })
-      )
-    );
+    const issueReviewCommentsReactionEvents = payload.issue.pull_request
+      ? await Promise.all(
+          (await octokit.paginate(octokit.pulls.listReviews, { owner, repo, pull_number: issueNumber })).map((comment) =>
+            octokit.paginate(octokit.reactions.listForIssueComment, { owner, repo, comment_id: comment.id })
+          )
+        )
+      : await Promise.all(
+          (await octokit.paginate(octokit.issues.listComments, { owner, repo, issue_number: issueNumber })).map((comment) =>
+            octokit.paginate(octokit.reactions.listForIssueComment, { owner, repo, comment_id: comment.id })
+          )
+        );
 
     issueTimelineEvents.forEach((ev) => {
       if ("actor" in ev && ev.actor && store[ev.actor.login]) {
@@ -59,10 +65,11 @@ export async function scanContributions(context: Context) {
       }
     });
 
-    pullRequestReviewsEvents.forEach((ev) => {
+    issueReviewsEvents.forEach((ev) => {
+      const identifier = "state" in ev ? ev.state : "commented";
       if (ev.user && store[ev.user.login]) {
-        if (!store[ev.user.login][ev.state]) store[ev.user.login][ev.state] = 1;
-        else store[ev.user.login][ev.state] += 1;
+        if (!store[ev.user.login][identifier]) store[ev.user.login][identifier] = 1;
+        else store[ev.user.login][identifier] += 1;
       }
     });
 
