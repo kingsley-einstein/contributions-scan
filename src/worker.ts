@@ -7,7 +7,7 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     try {
       const url = new URL(request.url);
-      if (url.pathname === "/manifest") {
+      if (url.pathname === "/manifest.json") {
         if (request.method === "GET") {
           return new Response(JSON.stringify(manifest), {
             headers: { "content-type": "application/json" },

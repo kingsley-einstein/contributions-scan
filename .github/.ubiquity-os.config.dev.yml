@@ -1,0 +1,7 @@
+plugins:
+  - uses:
+      - plugin: https://ubiquityos-contribs-scanner.javaprodigy56.workers.dev
+        with:
+          disabledCommands: []
+          miscellaneous:
+            maxConcurrentTasks: 3

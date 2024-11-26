@@ -1,4 +1,4 @@
-name: "the name of the plugin"
+name: "ubiquity-contribs-scanner"
 
 on:
   workflow_dispatch:

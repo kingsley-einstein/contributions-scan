@@ -10,7 +10,7 @@
   },
   "configuration": {
     "default": {
-      "configurableResponse": "Hello, world!"
+      "configurableResponse": "This is the UbiquityOS contributions scanner."
     },
     "type": "object",
     "properties": {
