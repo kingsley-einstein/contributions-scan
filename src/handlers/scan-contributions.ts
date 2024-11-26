@@ -10,7 +10,7 @@ export async function scanContributions(context: Context) {
   const owner = payload.repository.owner.login;
   const body = payload.comment.body;
 
-  if (!body.match(/scan-contributions/i)) {
+  if (!body.match(/scanContributions/i)) {
     return;
   }
 
