@@ -1,6 +1,6 @@
 plugins:
   - uses:
-      - plugin: https://ubiquityos-contribs-scanner-dev.javaprodigy56.workers.dev
+      - plugin: https://c99e-89-187-180-4.ngrok-free.app
         with:
           disabledCommands: []
           miscellaneous:
