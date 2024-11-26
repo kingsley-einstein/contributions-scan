@@ -7,7 +7,7 @@
     "issue_comment"
   ],
   "commands": {
-    "/scan-contributions": {
+    "scan-contributions": {
       "ubiquity:example": "/scan-contributions",
       "description": "Slash command that maps the names of contributors to events executed within a repo's context."
     }
