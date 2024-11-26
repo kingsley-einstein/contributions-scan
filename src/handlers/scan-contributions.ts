@@ -32,16 +32,16 @@ export async function scanContributions(context: Context) {
     const issueEvents = await octokit.paginate(octokit.issues.listEvents, { owner, repo, issue_number: issueNumber });
     const pullRequestReviewsEvents = await octokit.paginate(octokit.pulls.listReviews, { owner, repo, pull_number: issueNumber });
     const issueReactionEvents = await octokit.paginate(octokit.reactions.listForIssue, { owner, repo, issue_number: issueNumber });
-    // const issueCommentsReactionEvents = await Promise.all(
-    //   (await octokit.paginate(octokit.issues.listComments, { owner, repo, issue_number: issueNumber })).map((comment) =>
-    //     octokit.paginate(octokit.reactions.listForIssueComment, { owner, repo, comment_id: comment.id })
-    //   )
-    // );
-    // const issueReviewCommentsReactionEvents = await Promise.all(
-    //   (await octokit.paginate(octokit.pulls.listReviews, { owner, repo, pull_number: issueNumber })).map((comment) =>
-    //     octokit.paginate(octokit.reactions.listForIssueComment, { owner, repo, comment_id: comment.id })
-    //   )
-    // );
+    const issueCommentsReactionEvents = await Promise.all(
+      (await octokit.paginate(octokit.issues.listComments, { owner, repo, issue_number: issueNumber })).map((comment) =>
+        octokit.paginate(octokit.reactions.listForIssueComment, { owner, repo, comment_id: comment.id })
+      )
+    );
+    const issueReviewCommentsReactionEvents = await Promise.all(
+      (await octokit.paginate(octokit.pulls.listReviews, { owner, repo, pull_number: issueNumber })).map((comment) =>
+        octokit.paginate(octokit.reactions.listForIssueComment, { owner, repo, comment_id: comment.id })
+      )
+    );
 
     issueTimelineEvents.forEach((ev) => {
       if ("actor" in ev && ev.actor && store[ev.actor.login]) {
@@ -71,22 +71,22 @@ export async function scanContributions(context: Context) {
       }
     });
 
-    // issueCommentsReactionEvents.forEach((event) => {
-    //   event.forEach((ev) => {
-    //     if (ev.user && store[ev.user.login]) {
-    //       if (!store[ev.user.login][ev.content]) store[ev.user.login][ev.content] = 1;
-    //       else store[ev.user.login][ev.content] += 1;
-    //     }
-    //   });
-    // });
-    // issueReviewCommentsReactionEvents.forEach((event) => {
-    //   event.forEach((ev) => {
-    //     if (ev.user && store[ev.user.login]) {
-    //       if (!store[ev.user.login][ev.content]) store[ev.user.login][ev.content] = 1;
-    //       else store[ev.user.login][ev.content] += 1;
-    //     }
-    //   });
-    // });
+    issueCommentsReactionEvents.forEach((event) => {
+      event.forEach((ev) => {
+        if (ev.user && store[ev.user.login]) {
+          if (!store[ev.user.login][ev.content]) store[ev.user.login][ev.content] = 1;
+          else store[ev.user.login][ev.content] += 1;
+        }
+      });
+    });
+    issueReviewCommentsReactionEvents.forEach((event) => {
+      event.forEach((ev) => {
+        if (ev.user && store[ev.user.login]) {
+          if (!store[ev.user.login][ev.content]) store[ev.user.login][ev.content] = 1;
+          else store[ev.user.login][ev.content] += 1;
+        }
+      });
+    });
 
     logger.info("Contributions stats: ", store);
     const octokitCommentBody = "```json\n" + JSON.stringify(store, undefined, 2) + "\n```";

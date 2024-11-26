@@ -1,6 +1,6 @@
 plugins:
   - uses:
-      - plugin: https://c99e-89-187-180-4.ngrok-free.app
+      - plugin: https://normal-evolving-terrier.ngrok-free.app
         with:
           disabledCommands: []
           miscellaneous:
