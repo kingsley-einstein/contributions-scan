@@ -18,3 +18,4 @@ script.ts
 test-dashboard.md
 .platform*
 *Dockerfile*
+.dockerignore

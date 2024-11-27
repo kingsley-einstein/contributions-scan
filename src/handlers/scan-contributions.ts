@@ -30,26 +30,8 @@ export async function scanContributions(context: Context) {
 
     const issueTimelineEvents = await octokit.paginate(octokit.issues.listEventsForTimeline, { owner, repo, issue_number: issueNumber });
     const issueEvents = await octokit.paginate(octokit.issues.listEvents, { owner, repo, issue_number: issueNumber });
-    const issueReviewsEvents = payload.issue.pull_request
-      ? await octokit.paginate(octokit.pulls.listReviews, { owner, repo, pull_number: issueNumber })
-      : await octokit.paginate(octokit.issues.listComments, { owner, repo, issue_number: issueNumber });
     const issueReactionEvents = await octokit.paginate(octokit.reactions.listForIssue, { owner, repo, issue_number: issueNumber });
-    const issueCommentsReactionEvents = await Promise.all(
-      (await octokit.paginate(octokit.issues.listComments, { owner, repo, issue_number: issueNumber })).map((comment) =>
-        octokit.paginate(octokit.reactions.listForIssueComment, { owner, repo, comment_id: comment.id })
-      )
-    );
-    const issueReviewCommentsReactionEvents = payload.issue.pull_request
-      ? await Promise.all(
-          (await octokit.paginate(octokit.pulls.listReviews, { owner, repo, pull_number: issueNumber })).map((comment) =>
-            octokit.paginate(octokit.reactions.listForIssueComment, { owner, repo, comment_id: comment.id })
-          )
-        )
-      : await Promise.all(
-          (await octokit.paginate(octokit.issues.listComments, { owner, repo, issue_number: issueNumber })).map((comment) =>
-            octokit.paginate(octokit.reactions.listForIssueComment, { owner, repo, comment_id: comment.id })
-          )
-        );
+    const issueCommentEvents = await octokit.paginate(octokit.issues.listComments, { owner, repo, issue_number: issueNumber });
 
     issueTimelineEvents.forEach((ev) => {
       if ("actor" in ev && ev.actor && store[ev.actor.login]) {
@@ -65,14 +47,6 @@ export async function scanContributions(context: Context) {
       }
     });
 
-    issueReviewsEvents.forEach((ev) => {
-      const identifier = "state" in ev ? ev.state : "commented";
-      if (ev.user && store[ev.user.login]) {
-        if (!store[ev.user.login][identifier]) store[ev.user.login][identifier] = 1;
-        else store[ev.user.login][identifier] += 1;
-      }
-    });
-
     issueReactionEvents.forEach((ev) => {
       if (ev.user && store[ev.user.login]) {
         if (!store[ev.user.login][ev.content]) store[ev.user.login][ev.content] = 1;
@@ -80,22 +54,55 @@ export async function scanContributions(context: Context) {
       }
     });
 
-    issueCommentsReactionEvents.forEach((event) => {
-      event.forEach((ev) => {
-        if (ev.user && store[ev.user.login]) {
-          if (!store[ev.user.login][ev.content]) store[ev.user.login][ev.content] = 1;
-          else store[ev.user.login][ev.content] += 1;
+    for (const issueCommentEvent of issueCommentEvents) {
+      const reactions = await octokit.paginate(octokit.reactions.listForIssueComment, { owner, repo, comment_id: issueCommentEvent.id });
+
+      reactions.forEach((reaction) => {
+        if (reaction.user && store[reaction.user.login]) {
+          if (!store[reaction.user.login][reaction.content]) store[reaction.user.login][reaction.content] = 1;
+          else store[reaction.user.login][reaction.content] += 1;
         }
       });
-    });
-    issueReviewCommentsReactionEvents.forEach((event) => {
-      event.forEach((ev) => {
-        if (ev.user && store[ev.user.login]) {
-          if (!store[ev.user.login][ev.content]) store[ev.user.login][ev.content] = 1;
-          else store[ev.user.login][ev.content] += 1;
+    }
+
+    if (payload.issue.pull_request) {
+      const pullReviews = await octokit.paginate(octokit.pulls.listReviews, { owner, repo, pull_number: issueNumber });
+      const pullReviewComments = await octokit.paginate(octokit.pulls.listReviewComments, { owner, repo, pull_number: issueNumber });
+
+      for (const pullReview of pullReviews) {
+        if (pullReview.user && store[pullReview.user.login]) {
+          if (!store[pullReview.user.login][pullReview.state]) store[pullReview.user.login][pullReview.state] = 1;
+          else store[pullReview.user.login][pullReview.state] += 1;
         }
-      });
-    });
+
+        const reactions = await octokit.paginate(octokit.reactions.listForPullRequestReviewComment, { owner, repo, comment_id: pullReview.id });
+
+        reactions.forEach((reaction) => {
+          if (reaction.user && store[reaction.user.login]) {
+            if (!store[reaction.user.login][reaction.content]) store[reaction.user.login][reaction.content] = 1;
+            else store[reaction.user.login][reaction.content] += 1;
+          }
+        });
+      }
+
+      for (const pullReviewComment of pullReviewComments) {
+        const identifier = "response_to_review_" + pullReviewComment.pull_request_review_id;
+
+        if (pullReviewComment.user && store[pullReviewComment.user.login]) {
+          if (!store[pullReviewComment.user.login][identifier]) store[pullReviewComment.user.login][identifier] = 1;
+          else store[pullReviewComment.user.login][identifier] += 1;
+        }
+
+        const reactions = await octokit.paginate(octokit.reactions.listForPullRequestReviewComment, { owner, repo, comment_id: pullReviewComment.id });
+
+        reactions.forEach((reaction) => {
+          if (reaction.user && store[reaction.user.login]) {
+            if (!store[reaction.user.login][reaction.content]) store[reaction.user.login][reaction.content] = 1;
+            else store[reaction.user.login][reaction.content] += 1;
+          }
+        });
+      }
+    }
 
     logger.info("Contributions stats: ", store);
     const octokitCommentBody = "```json\n" + JSON.stringify(store, undefined, 2) + "\n```";
@@ -108,9 +115,25 @@ export async function scanContributions(context: Context) {
     });
   } catch (error) {
     if (error instanceof Error) {
+      const octokitCommentBody =
+        "An error occured while scanning this repository\n ```json\n" + JSON.stringify({ error: error, stack: error.stack }, undefined, 2) + "\n```";
+      await octokit.issues.createComment({
+        owner,
+        repo,
+        issue_number: issueNumber,
+        body: octokitCommentBody,
+      });
       logger.error(`Error creating comment:`, { error: error, stack: error.stack });
       throw error;
     } else {
+      const octokitCommentBody =
+        "An error occured while scanning this repository\n ```json\n" + JSON.stringify({ err: error, error: new Error() }, undefined, 2) + "\n```";
+      await octokit.issues.createComment({
+        owner,
+        repo,
+        issue_number: issueNumber,
+        body: octokitCommentBody,
+      });
       logger.error(`Error creating comment:`, { err: error, error: new Error() });
       throw error;
     }

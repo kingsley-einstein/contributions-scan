@@ -40,7 +40,7 @@ describe("Plugin tests", () => {
     expect(content).toEqual(manifest);
   });
 
-  it("Should handle an issue comment /scan-contributions", async () => {
+  it("Should handle an issue comment /scanContributions", async () => {
     const issues = db.issue.getAll();
     const issueNumber = issues[issues.length - 1].number;
 
@@ -49,10 +49,10 @@ describe("Plugin tests", () => {
     createContext(STRINGS.CONFIGURABLE_RESPONSE, "Hello world, again!", 1, 2, 3, issueNumber);
     createContext(STRINGS.CONFIGURABLE_RESPONSE, "Hello world, for the third time.", 1, 1, 4, issueNumber);
 
-    const { context, infoSpy } = createContext(STRINGS.CONFIGURABLE_RESPONSE, "/scan-contributions", 1, 1, 1, issueNumber);
+    const { context, infoSpy } = createContext(STRINGS.CONFIGURABLE_RESPONSE, "/scanContributions", 1, 1, 1, issueNumber);
 
     expect(context.eventName).toBe(ISSUE_COMMENT_CREATED);
-    expect(context.payload.comment.body).toBe("/scan-contributions");
+    expect(context.payload.comment.body).toBe("/scanContributions");
 
     await runPlugin(context);
     expect(infoSpy).toHaveBeenNthCalledWith(1, STRINGS.SCANNING_EVENTS);
