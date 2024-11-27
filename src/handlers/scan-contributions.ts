@@ -116,7 +116,7 @@ export async function scanContributions(context: Context) {
   } catch (error) {
     if (error instanceof Error) {
       const octokitCommentBody =
-        "An error occured while scanning this repository\n ```json\n" + JSON.stringify({ error: error, stack: error.stack }, undefined, 2) + "\n```";
+        "An error occurred while scanning this repository\n ```json\n" + JSON.stringify({ error: error, stack: error.stack }, undefined, 2) + "\n```";
       await octokit.issues.createComment({
         owner,
         repo,
@@ -127,7 +127,7 @@ export async function scanContributions(context: Context) {
       throw error;
     } else {
       const octokitCommentBody =
-        "An error occured while scanning this repository\n ```json\n" + JSON.stringify({ err: error, error: new Error() }, undefined, 2) + "\n```";
+        "An error occurred while scanning this repository\n ```json\n" + JSON.stringify({ err: error, error: new Error() }, undefined, 2) + "\n```";
       await octokit.issues.createComment({
         owner,
         repo,
