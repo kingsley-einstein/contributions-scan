@@ -1,6 +1,6 @@
 plugins:
   - uses:
-      - plugin: https://normal-evolving-terrier.ngrok-free.app
+      - plugin: https://damaged-alysa-moniswap-b2f3cc8b.koyeb.app
         with:
           disabledCommands: []
           miscellaneous:

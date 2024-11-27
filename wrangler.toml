@@ -1,6 +1,6 @@
 name = "ubiquityos-contribs-scanner"
 main = "src/worker.ts"
-compatibility_date = "2024-09-23"
+compatibility_date = "2024-11-27"
 compatibility_flags = ["nodejs_compat"]
 
 [env.dev]
