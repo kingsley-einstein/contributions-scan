@@ -34,21 +34,32 @@ export async function scanContributions(context: Context) {
     const issueCommentEvents = await octokit.paginate(octokit.issues.listComments, { owner, repo, issue_number: issueNumber });
 
     issueTimelineEvents.forEach((ev) => {
-      if ("actor" in ev && ev.actor && store[ev.actor.login]) {
+      if ("actor" in ev && ev.actor && !store[ev.actor.login]) {
+        store[ev.actor.login] = {};
+      }
+
+      if ("actor" in ev && ev.actor) {
         if (!store[ev.actor.login][ev.event]) store[ev.actor.login][ev.event] = 1;
         else store[ev.actor.login][ev.event] += 1;
       }
     });
 
     issueEvents.forEach((ev) => {
-      if (ev.actor && store[ev.actor.login] && !issueTimelineEvents.map((te) => te.event).includes(ev.event)) {
+      if (ev.actor && !store[ev.actor.login]) {
+        store[ev.actor.login] = {};
+      }
+
+      if (ev.actor && !issueTimelineEvents.map((te) => te.event).includes(ev.event)) {
         if (!store[ev.actor.login][ev.event]) store[ev.actor.login][ev.event] = 1;
         else store[ev.actor.login][ev.event] += 1;
       }
     });
 
     issueReactionEvents.forEach((ev) => {
-      if (ev.user && store[ev.user.login]) {
+      if (ev.user && !store[ev.user.login]) {
+        store[ev.user.login] = {};
+      }
+      if (ev.user) {
         if (!store[ev.user.login][ev.content]) store[ev.user.login][ev.content] = 1;
         else store[ev.user.login][ev.content] += 1;
       }
@@ -58,7 +69,11 @@ export async function scanContributions(context: Context) {
       const reactions = await octokit.paginate(octokit.reactions.listForIssueComment, { owner, repo, comment_id: issueCommentEvent.id });
 
       reactions.forEach((reaction) => {
-        if (reaction.user && store[reaction.user.login]) {
+        if (reaction.user && !store[reaction.user.login]) {
+          store[reaction.user.login] = {};
+        }
+
+        if (reaction.user) {
           if (!store[reaction.user.login][reaction.content]) store[reaction.user.login][reaction.content] = 1;
           else store[reaction.user.login][reaction.content] += 1;
         }
@@ -70,14 +85,22 @@ export async function scanContributions(context: Context) {
       const pullReviewComments = await octokit.paginate(octokit.pulls.listReviewComments, { owner, repo, pull_number: issueNumber });
 
       for (const pullReview of pullReviews) {
-        if (pullReview.user && store[pullReview.user.login]) {
+        if (pullReview.user && !store[pullReview.user.login]) {
+          store[pullReview.user.login] = {};
+        }
+
+        if (pullReview.user) {
           if (!store[pullReview.user.login][pullReview.state]) store[pullReview.user.login][pullReview.state] = 1;
           else store[pullReview.user.login][pullReview.state] += 1;
         }
       }
 
       for (const pullReviewComment of pullReviewComments) {
-        if (pullReviewComment.user && store[pullReviewComment.user.login]) {
+        if (pullReviewComment.user && !store[pullReviewComment.user.login]) {
+          store[pullReviewComment.user.login] = {};
+        }
+
+        if (pullReviewComment.user) {
           if (!store[pullReviewComment.user.login][pullReviewComment.path]) store[pullReviewComment.user.login][pullReviewComment.path] = 1;
           else store[pullReviewComment.user.login][pullReviewComment.path] += 1;
         }
@@ -85,7 +108,11 @@ export async function scanContributions(context: Context) {
         const reactions = await octokit.paginate(octokit.reactions.listForPullRequestReviewComment, { owner, repo, comment_id: pullReviewComment.id });
 
         reactions.forEach((reaction) => {
-          if (reaction.user && store[reaction.user.login]) {
+          if (reaction.user && !store[reaction.user.login]) {
+            store[reaction.user.login] = {};
+          }
+
+          if (reaction.user) {
             if (!store[reaction.user.login][reaction.content]) store[reaction.user.login][reaction.content] = 1;
             else store[reaction.user.login][reaction.content] += 1;
           }
