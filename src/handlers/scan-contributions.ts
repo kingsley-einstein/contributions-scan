@@ -77,11 +77,9 @@ export async function scanContributions(context: Context) {
       }
 
       for (const pullReviewComment of pullReviewComments) {
-        const identifier = "response_to_review_" + pullReviewComment.pull_request_review_id;
-
         if (pullReviewComment.user && store[pullReviewComment.user.login]) {
-          if (!store[pullReviewComment.user.login][identifier]) store[pullReviewComment.user.login][identifier] = 1;
-          else store[pullReviewComment.user.login][identifier] += 1;
+          if (!store[pullReviewComment.user.login][pullReviewComment.path]) store[pullReviewComment.user.login][pullReviewComment.path] = 1;
+          else store[pullReviewComment.user.login][pullReviewComment.path] += 1;
         }
 
         const reactions = await octokit.paginate(octokit.reactions.listForPullRequestReviewComment, { owner, repo, comment_id: pullReviewComment.id });
