@@ -90,8 +90,8 @@ export async function scanContributions(context: Context) {
         }
 
         if (pullReview.user) {
-          if (!store[pullReview.user.login][pullReview.state]) store[pullReview.user.login][pullReview.state] = 1;
-          else store[pullReview.user.login][pullReview.state] += 1;
+          if (!store[pullReview.user.login][pullReview.state.toLowerCase()]) store[pullReview.user.login][pullReview.state.toLowerCase()] = 1;
+          else store[pullReview.user.login][pullReview.state.toLowerCase()] += 1;
         }
       }
 
