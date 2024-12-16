@@ -100,9 +100,11 @@ export async function scanContributions(context: Context) {
           store[pullReviewComment.user.login] = {};
         }
 
+        const key = "pull_request_review_comment.created";
+
         if (pullReviewComment.user) {
-          if (!store[pullReviewComment.user.login][pullReviewComment.path]) store[pullReviewComment.user.login][pullReviewComment.path] = 1;
-          else store[pullReviewComment.user.login][pullReviewComment.path] += 1;
+          if (!store[pullReviewComment.user.login][key]) store[pullReviewComment.user.login][key] = 1;
+          else store[pullReviewComment.user.login][key] += 1;
         }
 
         const reactions = await octokit.paginate(octokit.reactions.listForPullRequestReviewComment, { owner, repo, comment_id: pullReviewComment.id });
