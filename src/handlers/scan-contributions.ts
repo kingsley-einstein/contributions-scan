@@ -39,8 +39,9 @@ export async function scanContributions(context: Context) {
       }
 
       if ("actor" in ev && ev.actor) {
-        if (!store[ev.actor.login][ev.event]) store[ev.actor.login][ev.event] = 1;
-        else store[ev.actor.login][ev.event] += 1;
+        const key = (payload.issue.pull_request ? "pull_request." : "issues.").concat(ev.event);
+        if (!store[ev.actor.login][key]) store[ev.actor.login][key] = 1;
+        else store[ev.actor.login][key] += 1;
       }
     });
 
@@ -50,8 +51,9 @@ export async function scanContributions(context: Context) {
       }
 
       if (ev.actor && !issueTimelineEvents.map((te) => te.event).includes(ev.event)) {
-        if (!store[ev.actor.login][ev.event]) store[ev.actor.login][ev.event] = 1;
-        else store[ev.actor.login][ev.event] += 1;
+        const key = (payload.issue.pull_request ? "pull_request." : "issues.").concat(ev.event);
+        if (!store[ev.actor.login][key]) store[ev.actor.login][key] = 1;
+        else store[ev.actor.login][key] += 1;
       }
     });
 
@@ -90,8 +92,9 @@ export async function scanContributions(context: Context) {
         }
 
         if (pullReview.user) {
-          if (!store[pullReview.user.login][pullReview.state.toLowerCase()]) store[pullReview.user.login][pullReview.state.toLowerCase()] = 1;
-          else store[pullReview.user.login][pullReview.state.toLowerCase()] += 1;
+          const key = "pull_request_review.".concat(pullReview.state.toLowerCase());
+          if (!store[pullReview.user.login][key]) store[pullReview.user.login][key] = 1;
+          else store[pullReview.user.login][key] += 1;
         }
       }
 
