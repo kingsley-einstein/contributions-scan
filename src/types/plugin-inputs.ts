@@ -23,7 +23,7 @@ export const pluginSettingsSchema = T.Object(
     configurableResponse: T.String(),
     customStringsUrl: T.Optional(T.String()),
   },
-  { default: { configurableResponse: "Hello, world!" } }
+  { default: { configurableResponse: "This is the UbiquityOS contributions scanner." } }
 );
 
 export const pluginSettingsValidator = new StandardValidator(pluginSettingsSchema);

@@ -21,26 +21,93 @@ export async function setupTests() {
     name: STRINGS.TEST_REPO,
     owner: {
       login: STRINGS.USER_1,
-      id: 1,
+      id: 0,
     },
     issues: [],
+    contributors: db.users.getAll(),
   });
 
   db.issue.create({
     ...issueTemplate,
+    number: 1,
+    event: "first_issue_created",
+    repo: STRINGS.TEST_REPO,
+    owner: STRINGS.USER_1,
+  });
+
+  db.issueEvents.create({
+    id: 1,
+    issueNumber: 1,
+    event: "issue_created",
+    actor: {
+      id: 0,
+      login: STRINGS.USER_1,
+    },
   });
 
   db.issue.create({
     ...issueTemplate,
+    repo: STRINGS.TEST_REPO,
+    owner: STRINGS.USER_1,
     id: 2,
     number: 2,
     labels: [],
   });
 
-  createComment("/Hello", 1);
+  db.issueEvents.create({
+    id: 2,
+    issueNumber: 2,
+    event: "issue_created",
+    actor: {
+      id: 0,
+      login: STRINGS.USER_1,
+    },
+  });
+
+  db.issue.create({
+    ...issueTemplate,
+    repo: STRINGS.TEST_REPO,
+    owner: STRINGS.USER_1,
+    id: 3,
+    number: 3,
+    labels: [],
+  });
+
+  db.issueEvents.create({
+    id: 3,
+    issueNumber: 3,
+    event: "issue_created",
+    actor: {
+      id: 0,
+      login: STRINGS.USER_1,
+    },
+  });
+
+  db.pullReviews.create({
+    id: 14,
+    issueNumber: 4,
+    state: "CHANGES_REQUESTED",
+    user: {
+      id: 0,
+      login: STRINGS.USER_1,
+    },
+  });
+
+  db.reactions.create({
+    id: 1,
+    issueNumber: 4,
+    content: "heart",
+    comment_id: 1,
+    user: {
+      id: 0,
+      login: STRINGS.USER_1,
+    },
+  });
+
+  createComment("/scan-contributions", 1);
 }
 
-export function createComment(comment: string, commentId: number) {
+export function createComment(comment: string, commentId: number, userId: number = 1, issueNumber: number = 1) {
   const isComment = db.issueComments.findFirst({
     where: {
       id: {
@@ -61,13 +128,53 @@ export function createComment(comment: string, commentId: number) {
       },
     });
   } else {
+    const user = db.users.findFirst({ where: { id: { equals: userId } } });
+    const events = db.issueEvents.getAll();
+    const reviews = db.pullReviews.getAll();
+    const reactions = db.reactions.getAll();
     db.issueComments.create({
       id: commentId,
       body: comment,
-      issue_number: 1,
+      issue_number: issueNumber,
       user: {
-        login: STRINGS.USER_1,
-        id: 1,
+        login: user?.login,
+        id: user?.id,
+      },
+    });
+    db.issueEvents.create({
+      id: events[events.length - 1].id + 1,
+      issueNumber,
+      event: "issue_comment.created",
+      actor: {
+        id: user?.id,
+        login: user?.login,
+      },
+    });
+    db.pullReviews.create({
+      id: reviews[reviews.length - 1].id + 1,
+      issueNumber,
+      state: "COMMENTED",
+      user: {
+        id: user?.id,
+        login: user?.login,
+      },
+    });
+    db.reactions.create({
+      id: reactions[reactions.length - 1].id + 1,
+      issueNumber,
+      content: "+1",
+      comment_id: commentId,
+      user: {
+        id: user?.id,
+        login: user?.login,
+      },
+    });
+    db.comments.create({
+      id: commentId,
+      body: comment,
+      user: {
+        id: user?.id,
+        login: user?.login,
       },
     });
   }

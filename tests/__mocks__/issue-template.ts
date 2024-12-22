@@ -3,6 +3,8 @@
  * starting point for testing your plugins. Adjust as needed.
  */
 export default {
+  actor: null,
+  event: "",
   author_association: "NONE",
   closed_at: null,
   comments: 0,
