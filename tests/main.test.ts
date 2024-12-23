@@ -12,6 +12,8 @@ import { Logs } from "@ubiquity-dao/ubiquibot-logger";
 import { Env } from "../src/types";
 import { runPlugin } from "../src/plugin";
 
+const ISSUE_COMMENT_CREATED = "issue_comment.created";
+
 dotenv.config();
 jest.requireActual("@octokit/rest");
 const octokit = new Octokit();
@@ -33,55 +35,30 @@ describe("Plugin tests", () => {
 
   it("Should serve the manifest file", async () => {
     const worker = (await import("../src/worker")).default;
-    const response = await worker.fetch(new Request("http://localhost/manifest"), {});
+    const response = await worker.fetch(new Request("http://localhost/manifest.json"), {});
     const content = await response.json();
     expect(content).toEqual(manifest);
   });
 
-  it("Should handle an issue comment event", async () => {
-    const { context, infoSpy, errorSpy, debugSpy, okSpy, verboseSpy } = createContext();
+  it("Should handle an issue comment /scanContributions", async () => {
+    const issues = db.issue.getAll();
+    const issueNumber = issues[issues.length - 1].number;
 
-    expect(context.eventName).toBe("issue_comment.created");
-    expect(context.payload.comment.body).toBe("/Hello");
+    // Create contexts for comments prior to command context
+    createContext(STRINGS.CONFIGURABLE_RESPONSE, "Hello world", 1, 1, 2, issueNumber);
+    createContext(STRINGS.CONFIGURABLE_RESPONSE, "Hello world, again!", 1, 2, 3, issueNumber);
+    createContext(STRINGS.CONFIGURABLE_RESPONSE, "Hello world, for the third time.", 1, 1, 4, issueNumber);
+
+    const { context, infoSpy } = createContext(STRINGS.CONFIGURABLE_RESPONSE, "/scanContributions", 1, 1, 1, issueNumber);
+
+    expect(context.eventName).toBe(ISSUE_COMMENT_CREATED);
+    expect(context.payload.comment.body).toBe("/scanContributions");
 
     await runPlugin(context);
+    expect(infoSpy).toHaveBeenNthCalledWith(1, STRINGS.SCANNING_EVENTS);
 
-    expect(errorSpy).not.toHaveBeenCalled();
-    expect(debugSpy).toHaveBeenNthCalledWith(1, STRINGS.EXECUTING_HELLO_WORLD, {
-      caller: STRINGS.CALLER_LOGS_ANON,
-      sender: STRINGS.USER_1,
-      repo: STRINGS.TEST_REPO,
-      issueNumber: 1,
-      owner: STRINGS.USER_1,
-    });
-    expect(infoSpy).toHaveBeenNthCalledWith(1, STRINGS.HELLO_WORLD);
-    expect(okSpy).toHaveBeenNthCalledWith(1, STRINGS.SUCCESSFULLY_CREATED_COMMENT);
-    expect(verboseSpy).toHaveBeenNthCalledWith(1, STRINGS.EXITING_HELLO_WORLD);
-  });
-
-  it("Should respond with `Hello, World!` in response to /Hello", async () => {
-    const { context } = createContext();
-    await runPlugin(context);
-    const comments = db.issueComments.getAll();
-    expect(comments.length).toBe(2);
-    expect(comments[1].body).toBe(STRINGS.HELLO_WORLD);
-  });
-
-  it("Should respond with `Hello, Code Reviewers` in response to /Hello", async () => {
-    const { context } = createContext(STRINGS.CONFIGURABLE_RESPONSE);
-    await runPlugin(context);
-    const comments = db.issueComments.getAll();
-    expect(comments.length).toBe(2);
-    expect(comments[1].body).toBe(STRINGS.CONFIGURABLE_RESPONSE);
-  });
-
-  it("Should not respond to a comment that doesn't contain /Hello", async () => {
-    const { context, errorSpy } = createContext(STRINGS.CONFIGURABLE_RESPONSE, STRINGS.INVALID_COMMAND);
-    await runPlugin(context);
-    const comments = db.issueComments.getAll();
-
-    expect(comments.length).toBe(1);
-    expect(errorSpy).toHaveBeenNthCalledWith(1, STRINGS.INVALID_USE_OF_SLASH_COMMAND, { caller: STRINGS.CALLER_LOGS_ANON, body: STRINGS.INVALID_COMMAND });
+    const comments = db.issueEvents.getAll();
+    expect(comments.map((comment) => comment.event)).toContain(ISSUE_COMMENT_CREATED);
   });
 });
 
@@ -105,7 +82,7 @@ function createContext(
   const sender = db.users.findFirst({ where: { id: { equals: payloadSenderId } } }) as unknown as Context["payload"]["sender"];
   const issue1 = db.issue.findFirst({ where: { id: { equals: issueOne } } }) as unknown as Context["payload"]["issue"];
 
-  createComment(commentBody, commentId); // create it first then pull it from the DB and feed it to _createContext
+  createComment(commentBody, commentId, sender.id, issue1.number); // create it first then pull it from the DB and feed it to _createContext
   const comment = db.issueComments.findFirst({ where: { id: { equals: commentId } } }) as unknown as Context["payload"]["comment"];
 
   const context = createContextInner(repo, sender, issue1, comment, configurableResponse);
@@ -149,7 +126,7 @@ function createContextInner(
       comment: comment,
       installation: { id: 1 } as Context["payload"]["installation"],
       organization: { login: STRINGS.USER_1 } as Context["payload"]["organization"],
-    },
+    } as Context["payload"],
     logger: new Logs("debug"),
     config: {
       configurableResponse,

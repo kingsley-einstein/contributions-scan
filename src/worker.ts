@@ -7,7 +7,7 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     try {
       const url = new URL(request.url);
-      if (url.pathname === "/manifest") {
+      if (url.pathname === "/manifest.json") {
         if (request.method === "GET") {
           return new Response(JSON.stringify(manifest), {
             headers: { "content-type": "application/json" },
@@ -34,10 +34,11 @@ export default {
       }
 
       const webhookPayload = await request.json();
-      const { decodedSettings, decodedEnv } = validateAndDecodeSchemas(env, webhookPayload.settings);
 
+      const { decodedSettings, decodedEnv } = validateAndDecodeSchemas(env, webhookPayload.settings);
       webhookPayload.env = decodedEnv;
       webhookPayload.settings = decodedSettings;
+
       await plugin(webhookPayload, decodedEnv);
       return new Response(JSON.stringify("OK"), { status: 200, headers: { "content-type": "application/json" } });
     } catch (error) {

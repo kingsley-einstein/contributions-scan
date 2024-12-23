@@ -1,13 +1,18 @@
-import * as github from "@actions/github";
 import { Octokit } from "@octokit/rest";
 import { TransformDecodeCheckError, TransformDecodeError, Value, ValueError } from "@sinclair/typebox/value";
-import { Env, envSchema, envValidator, PluginSettings, pluginSettingsSchema, pluginSettingsValidator } from "../types";
+import { Context, Env, envSchema, envValidator, PluginSettings, pluginSettingsSchema, pluginSettingsValidator } from "../types";
 
-export async function returnDataToKernel(repoToken: string, stateId: string, output: object, eventType = "return-data-to-ubiquity-os-kernel") {
+export async function returnDataToKernel(
+  repoToken: string,
+  stateId: string,
+  output: object,
+  context: Context,
+  eventType = "return-data-to-ubiquity-os-kernel"
+) {
   const octokit = new Octokit({ auth: repoToken });
   return octokit.repos.createDispatchEvent({
-    owner: github.context.repo.owner,
-    repo: github.context.repo.repo,
+    owner: context.payload.repository.owner.login,
+    repo: context.payload.repository.name,
     event_type: eventType,
     client_payload: {
       state_id: stateId,
